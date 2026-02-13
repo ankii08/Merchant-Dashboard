@@ -5,7 +5,7 @@ A full-stack analytics dashboard for visualizing and filtering merchant transact
 ![Node.js](https://img.shields.io/badge/Node.js-18.x-green)
 ![React](https://img.shields.io/badge/React-18.x-blue)
 
-## 🎯 Overview
+## Overview
 
 This dashboard allows merchants to:
 - View **Month-to-Date (MTD)** transaction summaries
@@ -13,7 +13,7 @@ This dashboard allows merchants to:
 - **Filter data** by card brand, transaction status, and decline reason
 - Track **approval rates** and transaction volumes in real-time
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -68,7 +68,7 @@ Navigate to **http://localhost:5173** in your browser.
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 merchant-transaction-dashboard/
@@ -115,7 +115,7 @@ merchant-transaction-dashboard/
 
 ---
 
-## 🔌 API Reference
+## API Reference
 
 **Base URL:** `http://localhost:3001/api`
 
