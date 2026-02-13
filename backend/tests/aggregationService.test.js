@@ -186,25 +186,47 @@ describe('Aggregation Service', () => {
   });
 
   describe('calculateMTDSummary', () => {
+    // Mock the date to always be February 2026 for consistent test results
+    beforeAll(() => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-02-15T12:00:00.000Z'));
+    });
+
+    afterAll(() => {
+      jest.useRealTimers();
+    });
+
     it('should return current month transactions only', () => {
-      // Note: This test depends on the current date
       const mtd = calculateMTDSummary(mockTransactions);
       
-      expect(mtd).toHaveProperty('month');
-      expect(mtd).toHaveProperty('monthFormatted');
-      expect(mtd).toHaveProperty('totalTransactions');
-      expect(mtd).toHaveProperty('totalApproved');
-      expect(mtd).toHaveProperty('totalDeclined');
+      expect(mtd.month).toBe('2026-02');
+      expect(mtd.monthFormatted).toBe('Feb 2026');
+      expect(mtd.totalTransactions).toBe(3);
+      expect(mtd.totalApproved).toBe(2);
+      expect(mtd.totalDeclined).toBe(1);
     });
 
-    it('should include byCardBrand breakdown', () => {
+    it('should include byCardBrand breakdown with correct values', () => {
       const mtd = calculateMTDSummary(mockTransactions);
+      
       expect(mtd).toHaveProperty('byCardBrand');
+      expect(mtd.byCardBrand.Visa.count).toBe(2);
+      expect(mtd.byCardBrand.Mastercard.count).toBe(1);
     });
 
-    it('should include byDeclineReason breakdown', () => {
+    it('should include byDeclineReason breakdown with correct values', () => {
       const mtd = calculateMTDSummary(mockTransactions);
+      
       expect(mtd).toHaveProperty('byDeclineReason');
+      expect(mtd.byDeclineReason['01-Insufficient funds'].count).toBe(1);
+    });
+
+    it('should calculate correct amounts for current month', () => {
+      const mtd = calculateMTDSummary(mockTransactions);
+      
+      expect(mtd.totalAmount).toBe(450.00); // 100 + 200 + 150
+      expect(mtd.approvedAmount).toBe(250.00); // 100 + 150
+      expect(mtd.declinedAmount).toBe(200.00); // 200
     });
   });
 

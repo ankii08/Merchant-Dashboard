@@ -199,6 +199,8 @@ npm run test:watch
 | Aggregation Service | MTD and monthly calculations | 100% |
 | API Integration | All endpoints with supertest | 88% |
 
+> **Note:** MTD tests use Jest's fake timers to mock the system date (Feb 2026), ensuring consistent test results regardless of when tests are run.
+
 ---
 
 ##  Development
