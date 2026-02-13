@@ -314,7 +314,7 @@ function App() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-          <MonthlySummary data={monthlySummary} loading={loading} />
+          <MonthlySummary data={monthlySummary} loading={loading} filters={filters} />
         </motion.div>
       </main>
     </div>

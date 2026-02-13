@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
 import { 
@@ -40,8 +40,13 @@ const getCardBrandColor = (brand) => CARD_BRAND_COLORS[brand] || {
  * month-over-month comparison indicators when applicable.
  * Includes Expand All / Collapse All controls for convenience.
  */
-function MonthlySummary({ data, loading }) {
+function MonthlySummary({ data, loading, filters }) {
   const [expandedMonths, setExpandedMonths] = useState(new Set());
+
+  // Collapse all months when filters change
+  useEffect(() => {
+    setExpandedMonths(new Set());
+  }, [filters]);
 
   // Compute if all months are expanded
   const allExpanded = useMemo(() => {
