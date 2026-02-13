@@ -223,7 +223,6 @@ The `transactionApi.js` module handles:
 - More development time
 - Less sophisticated interactions
 
-**Future Improvement**: Add a charting library (e.g., Recharts) for data visualization.
 
 ### 4. Testing Strategy
 
