@@ -1,17 +1,29 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
 import { 
   Calendar, 
   ChevronDown, 
-  TrendingUp, 
-  TrendingDown,
   CreditCard,
   CheckCircle,
   XCircle,
   DollarSign,
-  Minus
+  ChevronUpSquare,
+  ChevronDownSquare,
+  AlertCircle
 } from 'lucide-react';
+
+// Card brand colors for visual distinction
+const CARD_BRAND_COLORS = {
+  Visa: { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/20' },
+  Mastercard: { bg: 'bg-orange-500/20', text: 'text-orange-400', border: 'border-orange-500/20' },
+  Amex: { bg: 'bg-cyan-500/20', text: 'text-cyan-400', border: 'border-cyan-500/20' },
+  Discover: { bg: 'bg-amber-500/20', text: 'text-amber-400', border: 'border-amber-500/20' },
+};
+
+const getCardBrandColor = (brand) => CARD_BRAND_COLORS[brand] || { 
+  bg: 'bg-slate-500/20', text: 'text-slate-400', border: 'border-slate-500/20' 
+};
 
 /**
  * MonthlySummary Component
@@ -20,13 +32,44 @@ import {
  * Each card shows summary metrics and can be clicked to reveal:
  * - Volume and transaction count
  * - Approved/declined breakdown
- * - Approval rate with trend indicator vs previous month
+ * - Approval rate
+ * - Card brand breakdown with individual stats
+ * - Decline reason breakdown with lost volume
  * 
  * Cards are sorted by date (most recent first) and include
  * month-over-month comparison indicators when applicable.
+ * Includes Expand All / Collapse All controls for convenience.
  */
 function MonthlySummary({ data, loading }) {
-  const [expandedMonth, setExpandedMonth] = useState(null);
+  const [expandedMonths, setExpandedMonths] = useState(new Set());
+
+  // Compute if all months are expanded
+  const allExpanded = useMemo(() => {
+    if (!data || data.length === 0) return false;
+    return data.every(month => expandedMonths.has(month.month));
+  }, [data, expandedMonths]);
+
+  const toggleMonth = (month) => {
+    setExpandedMonths(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(month)) {
+        newSet.delete(month);
+      } else {
+        newSet.add(month);
+      }
+      return newSet;
+    });
+  };
+
+  const expandAll = () => {
+    if (data) {
+      setExpandedMonths(new Set(data.map(m => m.month)));
+    }
+  };
+
+  const collapseAll = () => {
+    setExpandedMonths(new Set());
+  };
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
@@ -93,32 +136,58 @@ function MonthlySummary({ data, loading }) {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-500/20">
-          <Calendar className="w-5 h-5 text-amber-400" />
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-500/20">
+            <Calendar className="w-5 h-5 text-amber-400" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-semibold text-white tracking-tight">Monthly Breakdown</h2>
+            <p className="text-slate-500 text-sm mt-0.5">Transaction trends by month</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-2xl font-semibold text-white tracking-tight">Monthly Breakdown</h2>
-          <p className="text-slate-500 text-sm mt-0.5">Transaction trends by month</p>
+        
+        {/* Expand All / Collapse All Buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={expandAll}
+            disabled={allExpanded}
+            className={`
+              flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+              transition-all duration-200
+              ${allExpanded 
+                ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed' 
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
+              }
+            `}
+          >
+            <ChevronDownSquare className="w-3.5 h-3.5" />
+            Expand All
+          </button>
+          <button
+            onClick={collapseAll}
+            disabled={expandedMonths.size === 0}
+            className={`
+              flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+              transition-all duration-200
+              ${expandedMonths.size === 0
+                ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed' 
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
+              }
+            `}
+          >
+            <ChevronUpSquare className="w-3.5 h-3.5" />
+            Collapse All
+          </button>
         </div>
       </div>
 
       <div className="space-y-4">
         {data.map((month, index) => {
-          const isExpanded = expandedMonth === month.month;
-          const prevMonth = data[index + 1];
+          const isExpanded = expandedMonths.has(month.month);
           const approvalRate = month.totalTransactions > 0 
             ? (month.totalApproved / month.totalTransactions * 100) 
             : 0;
-          const prevApprovalRate = prevMonth && prevMonth.totalTransactions > 0
-            ? (prevMonth.totalApproved / prevMonth.totalTransactions * 100)
-            : null;
-          const volumeChange = prevMonth && prevMonth.totalAmount > 0
-            ? ((month.totalAmount - prevMonth.totalAmount) / prevMonth.totalAmount * 100)
-            : null;
-          const rateChange = prevApprovalRate !== null
-            ? (approvalRate - prevApprovalRate)
-            : null;
 
           return (
             <motion.div
@@ -143,7 +212,7 @@ function MonthlySummary({ data, loading }) {
               )}
 
               <button
-                onClick={() => setExpandedMonth(isExpanded ? null : month.month)}
+                onClick={() => toggleMonth(month.month)}
                 className="w-full p-6 flex items-center justify-between relative"
               >
                 <div className="flex items-center gap-4">
@@ -165,18 +234,6 @@ function MonthlySummary({ data, loading }) {
                     <p className="text-lg font-semibold text-white">
                       {formatCurrency(month.totalAmount || 0)}
                     </p>
-                    {volumeChange !== null && (
-                      <div className={`flex items-center justify-end gap-1 text-xs ${
-                        volumeChange >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                      }`}>
-                        {volumeChange >= 0 ? (
-                          <TrendingUp className="w-3 h-3" />
-                        ) : (
-                          <TrendingDown className="w-3 h-3" />
-                        )}
-                        <span>{Math.abs(volumeChange).toFixed(1)}% vs prev</span>
-                      </div>
-                    )}
                   </div>
 
                   <motion.div
@@ -266,22 +323,12 @@ function MonthlySummary({ data, loading }) {
                       <div className="mt-6">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm text-slate-400">Approval Rate</span>
-                          <div className="flex items-center gap-2">
-                            <span className={`text-lg font-bold ${
-                              approvalRate >= 80 ? 'text-emerald-400' :
-                              approvalRate >= 60 ? 'text-amber-400' : 'text-rose-400'
-                            }`}>
-                              {approvalRate.toFixed(1)}%
-                            </span>
-                            {rateChange !== null && (
-                              <span className={`text-xs flex items-center gap-0.5 ${
-                                rateChange >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                              }`}>
-                                {rateChange >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                                {Math.abs(rateChange).toFixed(1)}
-                              </span>
-                            )}
-                          </div>
+                          <span className={`text-lg font-bold ${
+                            approvalRate >= 80 ? 'text-emerald-400' :
+                            approvalRate >= 60 ? 'text-amber-400' : 'text-rose-400'
+                          }`}>
+                            {approvalRate.toFixed(1)}%
+                          </span>
                         </div>
                         <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
                           <motion.div
@@ -296,6 +343,58 @@ function MonthlySummary({ data, loading }) {
                           />
                         </div>
                       </div>
+
+                      {/* Card Brand Breakdown */}
+                      {month.byCardBrand && Object.keys(month.byCardBrand).length > 0 && (
+                        <div className="mt-6">
+                          <h4 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2">
+                            <CreditCard className="w-4 h-4 text-amber-400" />
+                            By Card Brand
+                          </h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {Object.entries(month.byCardBrand).map(([brand, stats]) => {
+                              const colors = getCardBrandColor(brand);
+                              return (
+                                <div
+                                  key={brand}
+                                  className={`bg-slate-800/50 border ${colors.border} rounded-xl p-3`}
+                                >
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className={`text-xs font-semibold ${colors.text}`}>{brand}</span>
+                                    <span className="text-xs text-slate-500">{stats.count} txn</span>
+                                  </div>
+                                  <div className="text-sm font-bold text-white">${stats.amount.toLocaleString()}</div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Decline Reasons */}
+                      {month.byDeclineReason && Object.keys(month.byDeclineReason).length > 0 && (
+                        <div className="mt-6">
+                          <h4 className="text-sm font-medium text-slate-400 mb-3">
+                            Declines by Reason
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {Object.entries(month.byDeclineReason)
+                              .sort((a, b) => b[1].count - a[1].count)
+                              .map(([reason, stats]) => (
+                                <div
+                                  key={reason}
+                                  className="bg-slate-800/50 border border-rose-500/10 rounded-xl p-3"
+                                >
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="text-xs font-medium text-rose-400">{reason}</span>
+                                    <span className="text-xs text-slate-500">{stats.count} declined</span>
+                                  </div>
+                                  <div className="text-sm font-bold text-white">${stats.amount.toLocaleString()}</div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 )}

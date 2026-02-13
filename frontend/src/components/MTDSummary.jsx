@@ -6,8 +6,22 @@ import {
   CheckCircle, 
   XCircle, 
   TrendingUp,
-  Percent
+  Percent,
+  AlertCircle
 } from 'lucide-react';
+
+// Card brand colors for visual distinction
+const CARD_BRAND_COLORS = {
+  Visa: { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/20' },
+  Mastercard: { bg: 'bg-orange-500/20', text: 'text-orange-400', border: 'border-orange-500/20' },
+  Amex: { bg: 'bg-cyan-500/20', text: 'text-cyan-400', border: 'border-cyan-500/20' },
+  Discover: { bg: 'bg-amber-500/20', text: 'text-amber-400', border: 'border-amber-500/20' },
+};
+
+// Get color config for a card brand (with fallback)
+const getCardBrandColor = (brand) => CARD_BRAND_COLORS[brand] || { 
+  bg: 'bg-slate-500/20', text: 'text-slate-400', border: 'border-slate-500/20' 
+};
 
 /**
  * MTDSummary Component
@@ -200,6 +214,90 @@ function MTDSummary({ data, loading }) {
           );
         })}
       </div>
+
+      {/* Card Brand Breakdown Section */}
+      {data.byCardBrand && Object.keys(data.byCardBrand).length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+          className="mt-8"
+        >
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <CreditCard className="w-5 h-5 text-amber-400" />
+            By Card Brand
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Object.entries(data.byCardBrand).map(([brand, stats]) => {
+              const colors = getCardBrandColor(brand);
+              return (
+                <motion.div
+                  key={brand}
+                  whileHover={{ scale: 1.02 }}
+                  className={`
+                    bg-slate-900/50 backdrop-blur-2xl
+                    border ${colors.border} rounded-2xl p-4
+                    hover:bg-slate-900/80 transition-all duration-300
+                  `}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <span className={`text-sm font-semibold ${colors.text}`}>{brand}</span>
+                    <span className={`text-xs px-2 py-1 rounded-full ${colors.bg} ${colors.text}`}>
+                      {stats.count} txn
+                    </span>
+                  </div>
+                  <div className="text-xl font-bold text-white">
+                    ${stats.amount.toLocaleString()}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Decline Reason Breakdown Section */}
+      {data.byDeclineReason && Object.keys(data.byDeclineReason).length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+          className="mt-8"
+        >
+          <h3 className="text-lg font-semibold text-white mb-4">
+            Declines by Reason
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Object.entries(data.byDeclineReason)
+              .sort((a, b) => b[1].count - a[1].count)
+              .map(([reason, stats]) => (
+                <motion.div
+                  key={reason}
+                  whileHover={{ scale: 1.02 }}
+                  className="
+                    bg-slate-900/50 backdrop-blur-2xl
+                    border border-rose-500/10 rounded-2xl p-4
+                    hover:border-rose-500/20 hover:bg-slate-900/80 
+                    transition-all duration-300
+                  "
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="text-sm font-medium text-rose-400">{reason}</span>
+                    <span className="text-xs px-2 py-1 rounded-full bg-rose-500/20 text-rose-400">
+                      {stats.count} declined
+                    </span>
+                  </div>
+                  <div className="text-lg font-bold text-white">
+                    ${stats.amount.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">
+                    lost volume
+                  </div>
+                </motion.div>
+              ))}
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

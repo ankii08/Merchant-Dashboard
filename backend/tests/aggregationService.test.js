@@ -158,21 +158,21 @@ describe('Aggregation Service', () => {
     it('should group by card brand correctly', () => {
       const metrics = calculateMetrics(mockTransactions);
       
-      expect(metrics.byCardBrand.Visa.total).toBe(3);
+      expect(metrics.byCardBrand.Visa.count).toBe(3);
       expect(metrics.byCardBrand.Visa.approved).toBe(2);
       expect(metrics.byCardBrand.Visa.declined).toBe(1);
       
-      expect(metrics.byCardBrand.Mastercard.total).toBe(1);
-      expect(metrics.byCardBrand.Amex.total).toBe(1);
-      expect(metrics.byCardBrand.Discover.total).toBe(1);
+      expect(metrics.byCardBrand.Mastercard.count).toBe(1);
+      expect(metrics.byCardBrand.Amex.count).toBe(1);
+      expect(metrics.byCardBrand.Discover.count).toBe(1);
     });
 
     it('should group by decline reason correctly', () => {
       const metrics = calculateMetrics(mockTransactions);
       
-      expect(metrics.byDeclineReason['01-Insufficient funds']).toBe(1);
-      expect(metrics.byDeclineReason['02-Invalid card number']).toBe(1);
-      expect(metrics.byDeclineReason['03-Suspected fraud']).toBe(1);
+      expect(metrics.byDeclineReason['01-Insufficient funds'].count).toBe(1);
+      expect(metrics.byDeclineReason['02-Invalid card number'].count).toBe(1);
+      expect(metrics.byDeclineReason['03-Suspected fraud'].count).toBe(1);
     });
 
     it('should handle empty array', () => {

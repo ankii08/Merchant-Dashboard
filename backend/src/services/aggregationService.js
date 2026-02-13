@@ -51,13 +51,13 @@ function calculateMetrics(transactions) {
   const approved = transactions.filter(t => t.status === 'Approved');
   const declined = transactions.filter(t => t.status === 'Declined');
   
-  // Group by card brand
+  // Group by card brand with count, approved, declined, and total amount
   const byCardBrand = {};
   transactions.forEach(t => {
     if (!byCardBrand[t.cardBrand]) {
-      byCardBrand[t.cardBrand] = { total: 0, approved: 0, declined: 0, amount: 0 };
+      byCardBrand[t.cardBrand] = { count: 0, approved: 0, declined: 0, amount: 0 };
     }
-    byCardBrand[t.cardBrand].total++;
+    byCardBrand[t.cardBrand].count++;
     byCardBrand[t.cardBrand].amount += t.amount;
     if (t.status === 'Approved') {
       byCardBrand[t.cardBrand].approved++;
@@ -66,14 +66,15 @@ function calculateMetrics(transactions) {
     }
   });
   
-  // Group by decline reason code
+  // Group by decline reason code with count and total declined amount
   const byDeclineReason = {};
   declined.forEach(t => {
     if (t.declineReasonCode) {
       if (!byDeclineReason[t.declineReasonCode]) {
-        byDeclineReason[t.declineReasonCode] = 0;
+        byDeclineReason[t.declineReasonCode] = { count: 0, amount: 0 };
       }
-      byDeclineReason[t.declineReasonCode]++;
+      byDeclineReason[t.declineReasonCode].count++;
+      byDeclineReason[t.declineReasonCode].amount += t.amount;
     }
   });
   
